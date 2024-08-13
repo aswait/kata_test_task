@@ -22,6 +22,21 @@ var romeToArab = map[string]int{
 	"X":    10,
 }
 
+var arabToRome = []struct {
+	value int
+	rome  string
+}{
+	{100, "C"},
+	{90, "XC"},
+	{50, "L"},
+	{40, "XL"},
+	{10, "X"},
+	{9, "IX"},
+	{5, "V"},
+	{4, "IV"},
+	{1, "I"},
+}
+
 type operand struct {
 	value      int
 	num_system string
@@ -36,7 +51,19 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Print(operands)
+	result, err := mathOperation(operands, expression[1])
+	if err != nil {
+		panic(err)
+	}
+	if operands[0].num_system == "arab" {
+		fmt.Println(result)
+	} else {
+		arabResult, err := intToRome(result)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(arabResult)
+	}
 }
 
 func readExpression() ([]string, error) {
@@ -91,7 +118,6 @@ func operandToStruct(stringOperand string) (operand, error) {
 		operandStruct.value = arab
 		operandStruct.num_system = "arab"
 	}
-	fmt.Print(operandStruct.num_system)
 	return operandStruct, nil
 }
 
@@ -115,4 +141,38 @@ func checkNumSystems(firstOperand string, secondOperand string) ([]operand, erro
 
 	operandsArray[0], operandsArray[1] = firstOperandStruct, secondOperandStruct
 	return operandsArray, err
+}
+
+func mathOperation(operands []operand, operator string) (int, error) {
+	var result int
+
+	switch operator {
+	case "+":
+		result = operands[0].value + operands[1].value
+	case "-":
+		result = operands[0].value - operands[1].value
+	case "/":
+		result = operands[0].value / operands[1].value
+	case "*":
+		result = operands[0].value * operands[1].value
+	default:
+		err := errors.New("mathematical operation does not satisfy the condition - only operators (+, -, /, *)")
+		return 0, err
+	}
+	return result, nil
+}
+
+func intToRome(arab int) (string, error) {
+	if arab <= 0 {
+		err := errors.New("a mathematical operation on Roman numerals cannot be less than or equal to zero")
+		return "", err
+	}
+	var romeString string
+	for _, romeStruct := range arabToRome {
+		for arab >= romeStruct.value {
+			romeString += romeStruct.rome
+			arab -= romeStruct.value
+		}
+	}
+	return romeString, nil
 }
