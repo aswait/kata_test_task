@@ -32,11 +32,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	f, err := operandToStruct(expression[0])
-	fmt.Print(f)
+	operands, err := checkNumSystems(expression[0], expression[2])
 	if err != nil {
 		panic(err)
 	}
+	fmt.Print(operands)
 }
 
 func readExpression() ([]string, error) {
@@ -54,10 +54,14 @@ func readExpression() ([]string, error) {
 }
 
 func operandIsArab(operand string) (int, error) {
-	myErr := errors.New("string is not a mathematical operation")
 	arab, err := strconv.Atoi(operand)
-	if err != nil || arab > 10 || arab <= 0 {
-		return 0, myErr
+
+	if err != nil {
+		err := errors.New("string is not a mathematical operation")
+		return 0, err
+	} else if arab > 10 || arab <= 0 {
+		err := errors.New("too large values that do not satisfy the condition")
+		return 0, err
 	}
 	return arab, nil
 }
@@ -73,11 +77,11 @@ func operandIsRome(operand string) (int, error) {
 func operandToStruct(stringOperand string) (operand, error) {
 	var operandStruct operand
 
-	arab, err := operandIsArab(stringOperand)
-	if err != nil {
+	arab, arab_err := operandIsArab(stringOperand)
+	if arab_err != nil {
 		rome, err := operandIsRome(stringOperand)
 		if err != nil {
-			return operandStruct, err
+			return operandStruct, arab_err
 		} else {
 			operandStruct.value = rome
 			operandStruct.num_system = "rome"
@@ -87,5 +91,28 @@ func operandToStruct(stringOperand string) (operand, error) {
 		operandStruct.value = arab
 		operandStruct.num_system = "arab"
 	}
+	fmt.Print(operandStruct.num_system)
 	return operandStruct, nil
+}
+
+func checkNumSystems(firstOperand string, secondOperand string) ([]operand, error) {
+	operandsArray := make([]operand, 2)
+
+	firstOperandStruct, err := operandToStruct(firstOperand)
+	if err != nil {
+		return operandsArray, err
+	}
+
+	secondOperandStruct, err := operandToStruct(secondOperand)
+	if err != nil {
+		return operandsArray, err
+	}
+
+	if firstOperandStruct.num_system != secondOperandStruct.num_system {
+		err = errors.New("different number systems are used simultaneously.")
+		return operandsArray, err
+	}
+
+	operandsArray[0], operandsArray[1] = firstOperandStruct, secondOperandStruct
+	return operandsArray, err
 }
